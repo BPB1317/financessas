@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 const NAV_LINKS = [
   { href: "/", label: "Vue d'ensemble" },
+  { href: "/performance", label: "Ma performance" },
   { href: "/investissements", label: "Investissements" },
   { href: "/bilans", label: "Bilans mensuels" },
 ];
