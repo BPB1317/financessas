@@ -44,16 +44,16 @@ export function MembersTable({ rows }: { rows: MemberRow[] }) {
                 )}
               </span>
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="text-right font-mono tabular-nums">
               {formatEurPrecise(row.investment)}
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="text-right font-mono tabular-nums">
               {formatPercent(row.partsPct)}
             </TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell className="text-right font-mono tabular-nums">
               {formatPercent(row.dividendPct)}
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
+            <TableCell className="text-right font-mono font-medium tabular-nums">
               {formatEurPrecise(row.totalDividends)}
             </TableCell>
           </TableRow>

@@ -54,7 +54,7 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
           dataKey="date"
           tickLine={false}
           axisLine={{ stroke: "var(--border)" }}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-mono)" }}
           tickFormatter={(value: string) =>
             new Date(value).toLocaleDateString("fr-FR", {
               month: "short",
@@ -66,7 +66,7 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-mono)" }}
           tickFormatter={(value: number) => formatEurCompact(value)}
           width={64}
         />
@@ -124,14 +124,14 @@ function DividendsTooltip({
     .sort((a, b) => b.value - a.value);
 
   return (
-    <div className="rounded-md border border-border bg-card p-3 shadow-md">
-      <p className="mb-2 text-xs font-medium text-muted-foreground">
+    <div className="border border-border bg-card p-3 shadow-md">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label ? formatMonthYear(label) : ""}
       </p>
       <div className="space-y-1">
         {rows.map((row) => (
           <div key={row.name} className="flex items-center gap-3 text-sm">
-            <span className="font-medium tabular-nums text-foreground">
+            <span className="font-mono font-medium tabular-nums text-foreground">
               {formatEurPrecise(row.value)}
             </span>
             <span className="text-muted-foreground">{row.name}</span>

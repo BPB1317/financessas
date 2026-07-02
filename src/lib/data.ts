@@ -16,7 +16,11 @@ export async function getFundData(): Promise<FundData> {
 
   const [{ data: members }, { data: events }, { data: results }, { data: settingsRow }, { data: overrideRows }] =
     await Promise.all([
-      supabase.from("members").select("*").order("joined_date", { ascending: true }),
+      supabase
+        .from("members")
+        .select("*")
+        .order("joined_date", { ascending: true })
+        .order("created_at", { ascending: true }),
       supabase.from("investment_events").select("*").order("date", { ascending: true }),
       supabase.from("monthly_results").select("*").order("date", { ascending: true }),
       supabase.from("settings").select("fund_name, manager_share_pct").single(),

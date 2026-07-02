@@ -46,16 +46,22 @@ export function MonthlyTable({
         {rows.map((row) => (
           <TableRow key={row.date}>
             <TableCell className="capitalize">{formatMonthYear(row.date)}</TableCell>
-            <TableCell className="text-right tabular-nums">
+            <TableCell
+              className={`text-right font-mono tabular-nums ${row.totalBenefice < 0 ? "text-destructive" : ""}`}
+            >
               {formatEurPrecise(row.totalBenefice)}
             </TableCell>
-            {members.map((member) => (
-              <TableCell key={member.id} className="text-right tabular-nums">
-                {row.dividends[member.id]
-                  ? formatEurPrecise(row.dividends[member.id])
-                  : "–"}
-              </TableCell>
-            ))}
+            {members.map((member) => {
+              const value = row.dividends[member.id];
+              return (
+                <TableCell
+                  key={member.id}
+                  className={`text-right font-mono tabular-nums ${value < 0 ? "text-destructive" : ""}`}
+                >
+                  {value ? formatEurPrecise(value) : "–"}
+                </TableCell>
+              );
+            })}
           </TableRow>
         ))}
       </TableBody>
