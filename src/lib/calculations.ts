@@ -8,6 +8,17 @@ export function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+// Dernier jour du mois d'une date ISO (YYYY-MM-DD) donnée, en UTC pour éviter
+// tout décalage de fuseau horaire. `monthly_results.date` est toujours le 1er
+// du mois par convention, mais un mouvement d'investissement manuel peut être
+// daté n'importe quel jour de ce même mois et doit quand même compter dans le
+// calcul du dividende de ce mois-là (voir "modification en cours de mois").
+export function endOfMonthIso(dateIso: string): string {
+  const [year, month] = dateIso.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+}
+
 // Investissement cumulé d'un membre à une date donnée (inclut les apports,
 // retraits, et dividendes déjà réinvestis à cette date).
 export function investmentAsOf(
@@ -86,7 +97,7 @@ export function memberMonthlyDividend(
   events: Pick<InvestmentEvent, "member_id" | "date" | "amount">[],
   settings: Pick<Settings, "manager_share_pct">
 ): number {
-  const pct = dividendPct(memberId, result.date, members, events, settings);
+  const pct = dividendPct(memberId, endOfMonthIso(result.date), members, events, settings);
   return round2(result.total_benefice * pct);
 }
 
