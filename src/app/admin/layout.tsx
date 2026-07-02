@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { href: "/admin", label: "Aperçu" },
   { href: "/admin/membres", label: "Membres" },
   { href: "/admin/investissements", label: "Investissements" },
+  { href: "/admin/dca", label: "DCA" },
   { href: "/admin/bilans", label: "Bilans mensuels" },
   { href: "/admin/parametres", label: "Paramètres" },
 ];

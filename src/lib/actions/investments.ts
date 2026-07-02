@@ -80,3 +80,17 @@ export async function deleteInvestmentEvent(formData: FormData): Promise<void> {
   await recomputeReinvestments();
   revalidateAll();
 }
+
+// Masque/démasque un mouvement dans l'historique visible par les membres.
+// Ne change rien aux calculs (investissement, dividendes) : le mouvement
+// continue de compter normalement, seule sa ligne disparaît de la vue publique.
+export async function toggleInvestmentEventHidden(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const hidden = formData.get("hidden") === "true";
+
+  const supabase = supabaseServer();
+  await supabase.from("investment_events").update({ hidden }).eq("id", id);
+
+  revalidateAll();
+}

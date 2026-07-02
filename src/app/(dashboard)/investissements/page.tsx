@@ -21,7 +21,9 @@ export default async function InvestissementsPage() {
   const { members, events } = await getFundData();
   const memberById = new Map(members.map((m) => [m.id, m]));
 
-  const rows = [...events].sort((a, b) => b.date.localeCompare(a.date));
+  const rows = events
+    .filter((e) => !e.hidden)
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <div className="space-y-6">

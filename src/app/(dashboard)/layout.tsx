@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TickerTape, type TickerItem } from "@/components/dashboard/TickerTape";
 
 const NAV_LINKS = [
   { href: "/", label: "Vue d'ensemble" },
@@ -19,10 +20,24 @@ export default async function DashboardLayout({
 }) {
   const session = await requireSession();
   const supabase = supabaseServer();
-  const { data: settings } = await supabase
-    .from("settings")
-    .select("fund_name")
-    .single();
+  const [{ data: settings }, { data: recentEvents }] = await Promise.all([
+    supabase.from("settings").select("fund_name").single(),
+    supabase
+      .from("investment_events")
+      .select("id, date, amount, source, member:members(name)")
+      .eq("hidden", false)
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
+
+  const tickerItems: TickerItem[] = (recentEvents ?? []).map((event) => ({
+    id: event.id,
+    memberName: (event.member as unknown as { name: string } | null)?.name ?? "—",
+    amount: event.amount,
+    date: event.date,
+    isReinvestment: event.source === "reinvestment",
+  }));
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -67,6 +82,7 @@ export default async function DashboardLayout({
           </nav>
         </div>
       </header>
+      <TickerTape items={tickerItems} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
     </div>
   );

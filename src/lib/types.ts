@@ -23,6 +23,7 @@ export type InvestmentEvent = {
   source: InvestmentSource;
   monthly_result_id: string | null;
   note: string | null;
+  hidden: boolean;
   created_at: string;
 };
 

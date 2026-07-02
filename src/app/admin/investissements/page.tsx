@@ -2,6 +2,7 @@ import { getFundData, todayIso } from "@/lib/data";
 import {
   createInvestmentEvent,
   deleteInvestmentEvent,
+  toggleInvestmentEventHidden,
   updateInvestmentEvent,
 } from "@/lib/actions/investments";
 import { FormDialog } from "@/components/admin/FormDialog";
@@ -93,6 +94,7 @@ export default async function AdminInvestissementsPage() {
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Montant</TableHead>
                 <TableHead>Note</TableHead>
+                <TableHead>Visibilité</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -118,6 +120,16 @@ export default async function AdminInvestissementsPage() {
                     {formatEurPrecise(event.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{event.note ?? ""}</TableCell>
+                  <TableCell>
+                    <form action={toggleInvestmentEventHidden} className="flex items-center gap-2">
+                      <input type="hidden" name="id" value={event.id} />
+                      <input type="hidden" name="hidden" value={(!event.hidden).toString()} />
+                      {event.hidden && <Badge variant="secondary">Masqué</Badge>}
+                      <Button type="submit" variant="outline" size="sm">
+                        {event.hidden ? "Afficher" : "Masquer"}
+                      </Button>
+                    </form>
+                  </TableCell>
                   <TableCell>
                     {event.source === "manual" && (
                       <div className="flex justify-end gap-2">
