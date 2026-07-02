@@ -8,7 +8,7 @@ create extension if not exists "pgcrypto";
 create table settings (
   id boolean primary key default true,
   constraint settings_singleton check (id = true),
-  fund_name text not null default 'Notre fonds',
+  fund_name text not null default 'SAS Betting',
   manager_share_pct numeric(5, 2) not null default 75,
   updated_at timestamptz not null default now()
 );

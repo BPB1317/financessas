@@ -37,7 +37,7 @@ export async function getFundData(): Promise<FundData> {
     members: (members ?? []) as Member[],
     events: (events ?? []) as InvestmentEvent[],
     results: (results ?? []) as MonthlyResult[],
-    settings: (settingsRow ?? { fund_name: "Notre fonds", manager_share_pct: 75 }) as Settings,
+    settings: (settingsRow ?? { fund_name: "SAS Betting", manager_share_pct: 75 }) as Settings,
     overrides,
   };
 }

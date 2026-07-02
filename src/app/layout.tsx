@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dashboard du fonds",
+  title: "SAS Betting",
   description: "Suivi des investissements et dividendes du fonds.",
 };
 

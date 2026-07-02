@@ -29,7 +29,7 @@ export default async function DashboardLayout({
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-lg font-semibold tracking-tight">
-              {settings?.fund_name ?? "Notre fonds"}
+              {settings?.fund_name ?? "SAS Betting"}
             </span>
             <div className="flex items-center gap-3">
               <div className="text-right text-sm">

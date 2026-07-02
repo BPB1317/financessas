@@ -24,7 +24,7 @@ export default function LoginPage() {
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Espace privé
           </p>
-          <CardTitle className="text-2xl">Accès au fonds</CardTitle>
+          <CardTitle className="text-2xl">Accès SAS Betting</CardTitle>
           <CardDescription>
             Connectez-vous avec votre email et le mot de passe qui vous a été
             communiqué.
