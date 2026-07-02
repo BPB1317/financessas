@@ -125,7 +125,7 @@ export default async function AdminDcaPage() {
                     <TableCell className="font-medium">
                       {memberById.get(rule.member_id)?.name ?? "—"}
                     </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums">
+                    <TableCell className="text-right tabular-nums">
                       {formatEurPrecise(rule.amount)}
                     </TableCell>
                     <TableCell>{rule.day_of_month}</TableCell>

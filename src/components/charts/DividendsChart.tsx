@@ -54,7 +54,7 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
           dataKey="date"
           tickLine={false}
           axisLine={{ stroke: "var(--border)" }}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-mono)" }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 12}}
           tickFormatter={(value: string) =>
             new Date(value).toLocaleDateString("fr-FR", {
               month: "short",
@@ -66,7 +66,7 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
         <YAxis
           tickLine={false}
           axisLine={false}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12, fontFamily: "var(--font-mono)" }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 12}}
           tickFormatter={(value: number) => formatEurCompact(value)}
           width={64}
         />
@@ -131,7 +131,7 @@ function DividendsTooltip({
       <div className="space-y-1">
         {rows.map((row) => (
           <div key={row.name} className="flex items-center gap-3 text-sm">
-            <span className="font-mono font-medium tabular-nums text-foreground">
+            <span className="font-medium tabular-nums text-foreground">
               {formatEurPrecise(row.value)}
             </span>
             <span className="text-muted-foreground">{row.name}</span>

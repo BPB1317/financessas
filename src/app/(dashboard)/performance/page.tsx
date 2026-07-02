@@ -153,7 +153,7 @@ export default async function PerformancePage({
                           {formatMonthYear(result.date)}
                         </TableCell>
                         <TableCell
-                          className={`text-right font-mono tabular-nums ${dividend < 0 ? "text-destructive" : ""}`}
+                          className={`text-right tabular-nums ${dividend < 0 ? "text-destructive" : ""}`}
                         >
                           {formatEurPrecise(dividend)}
                         </TableCell>

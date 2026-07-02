@@ -47,7 +47,7 @@ export function MonthlyTable({
           <TableRow key={row.date}>
             <TableCell className="capitalize">{formatMonthYear(row.date)}</TableCell>
             <TableCell
-              className={`text-right font-mono tabular-nums ${row.totalBenefice < 0 ? "text-destructive" : ""}`}
+              className={`text-right tabular-nums ${row.totalBenefice < 0 ? "text-destructive" : ""}`}
             >
               {formatEurPrecise(row.totalBenefice)}
             </TableCell>
@@ -56,7 +56,7 @@ export function MonthlyTable({
               return (
                 <TableCell
                   key={member.id}
-                  className={`text-right font-mono tabular-nums ${value < 0 ? "text-destructive" : ""}`}
+                  className={`text-right tabular-nums ${value < 0 ? "text-destructive" : ""}`}
                 >
                   {value ? formatEurPrecise(value) : "–"}
                 </TableCell>
