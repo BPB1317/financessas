@@ -24,13 +24,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function DashboardPage() {
-  const { members, events, results, settings } = await getFundData();
+  const { members, events, results, settings, overrides } = await getFundData();
   const today = todayIso();
 
   const totalInvestment = totalInvestmentAsOf(today, members, events);
   const totalDividendsAllTime = round2(
     members.reduce(
-      (sum, m) => sum + totalDividendsReceived(m.id, results, members, events, settings),
+      (sum, m) => sum + totalDividendsReceived(m.id, results, members, events, settings, overrides),
       0
     )
   );
@@ -43,11 +43,11 @@ export default async function DashboardPage() {
       investment: investmentAsOf(m.id, today, events),
       partsPct: partsPct(m.id, today, members, events),
       dividendPct: dividendPct(m.id, today, members, events, settings),
-      totalDividends: totalDividendsReceived(m.id, results, members, events, settings),
+      totalDividends: totalDividendsReceived(m.id, results, members, events, settings, overrides),
     }))
     .sort((a, b) => (b.isManager ? 1 : 0) - (a.isManager ? 1 : 0) || b.investment - a.investment);
 
-  const chartData = cumulativeDividendSeries(members, results, events, settings);
+  const chartData = cumulativeDividendSeries(members, results, events, settings, overrides);
 
   const years = Array.from(new Set(results.map((r) => r.date.slice(0, 4)))).sort(
     (a, b) => Number(b) - Number(a)
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
     rowsByYear[year] = results
       .filter((r) => r.date.startsWith(year))
       .map((r) => {
-        const breakdown = monthlyBreakdown(r, members, events, settings);
+        const breakdown = monthlyBreakdown(r, members, events, settings, overrides);
         return {
           date: r.date,
           totalBenefice: r.total_benefice,

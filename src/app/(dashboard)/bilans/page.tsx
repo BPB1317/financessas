@@ -31,7 +31,7 @@ export default async function BilansPage() {
         <div className="space-y-4">
           {sorted.map((result) => (
             <Card key={result.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle className="capitalize">{formatMonthYear(result.date)}</CardTitle>
                   <CardDescription>

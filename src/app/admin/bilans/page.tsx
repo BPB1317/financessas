@@ -29,7 +29,7 @@ export default async function AdminBilansPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Bilans mensuels</h2>
           <p className="text-sm text-muted-foreground">
@@ -67,7 +67,7 @@ export default async function AdminBilansPage() {
         <div className="space-y-4">
           {sorted.map((result) => (
             <Card key={result.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2 capitalize">
                     {formatMonthYear(result.date)}

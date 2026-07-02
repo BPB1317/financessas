@@ -37,7 +37,7 @@ export default async function AdminInvestissementsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Investissements</h2>
           <p className="text-sm text-muted-foreground">

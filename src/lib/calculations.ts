@@ -89,14 +89,23 @@ export function dividendPct(
   return (memberInvestment / nonManagerTotal) * (1 - managerShare);
 }
 
+// Dividendes archivés (import de l'ancien suivi Excel) : { [monthly_result_id]: { [member_id]: montant } }.
+// Quand une valeur existe ici pour un (mois, membre), elle prime sur le calcul
+// automatique — voir supabase/migrations/0002_dividend_overrides.sql.
+export type DividendOverrides = Record<string, Record<string, number>>;
+
 // Dividende en euros d'un membre pour un mois donné.
 export function memberMonthlyDividend(
   memberId: string,
-  result: Pick<MonthlyResult, "date" | "total_benefice">,
+  result: Pick<MonthlyResult, "id" | "date" | "total_benefice">,
   members: Pick<Member, "id" | "is_manager">[],
   events: Pick<InvestmentEvent, "member_id" | "date" | "amount">[],
-  settings: Pick<Settings, "manager_share_pct">
+  settings: Pick<Settings, "manager_share_pct">,
+  overrides?: DividendOverrides
 ): number {
+  const override = overrides?.[result.id]?.[memberId];
+  if (override !== undefined) return override;
+
   const pct = dividendPct(memberId, endOfMonthIso(result.date), members, events, settings);
   return round2(result.total_benefice * pct);
 }
@@ -109,14 +118,15 @@ export type MemberMonthlyBreakdown = {
 // Répartition d'un mois donné entre tous les membres (utilisé pour générer
 // les mouvements de réinvestissement et pour l'affichage du tableau mensuel).
 export function monthlyBreakdown(
-  result: Pick<MonthlyResult, "date" | "total_benefice">,
+  result: Pick<MonthlyResult, "id" | "date" | "total_benefice">,
   members: Pick<Member, "id" | "is_manager">[],
   events: Pick<InvestmentEvent, "member_id" | "date" | "amount">[],
-  settings: Pick<Settings, "manager_share_pct">
+  settings: Pick<Settings, "manager_share_pct">,
+  overrides?: DividendOverrides
 ): MemberMonthlyBreakdown[] {
   return members.map((m) => ({
     memberId: m.id,
-    dividend: memberMonthlyDividend(m.id, result, members, events, settings),
+    dividend: memberMonthlyDividend(m.id, result, members, events, settings, overrides),
   }));
 }
 
@@ -124,9 +134,10 @@ export function monthlyBreakdown(
 // graphique "Dividendes versés". `results` doit être trié par date croissante.
 export function cumulativeDividendSeries(
   members: Pick<Member, "id" | "name" | "is_manager">[],
-  results: Pick<MonthlyResult, "date" | "total_benefice">[],
+  results: Pick<MonthlyResult, "id" | "date" | "total_benefice">[],
   events: Pick<InvestmentEvent, "member_id" | "date" | "amount">[],
-  settings: Pick<Settings, "manager_share_pct">
+  settings: Pick<Settings, "manager_share_pct">,
+  overrides?: DividendOverrides
 ): Array<{ date: string } & Record<string, number | string>> {
   const running: Record<string, number> = Object.fromEntries(
     members.map((m) => [m.id, 0])
@@ -144,7 +155,8 @@ export function cumulativeDividendSeries(
           result,
           members,
           events,
-          settings
+          settings,
+          overrides
         );
         running[member.id] = round2(running[member.id] + dividend);
         row[member.id] = running[member.id];
@@ -156,14 +168,15 @@ export function cumulativeDividendSeries(
 // Total des dividendes perçus par un membre depuis le début.
 export function totalDividendsReceived(
   memberId: string,
-  results: Pick<MonthlyResult, "date" | "total_benefice">[],
+  results: Pick<MonthlyResult, "id" | "date" | "total_benefice">[],
   members: Pick<Member, "id" | "is_manager">[],
   events: Pick<InvestmentEvent, "member_id" | "date" | "amount">[],
-  settings: Pick<Settings, "manager_share_pct">
+  settings: Pick<Settings, "manager_share_pct">,
+  overrides?: DividendOverrides
 ): number {
   return round2(
     results.reduce(
-      (sum, r) => sum + memberMonthlyDividend(memberId, r, members, events, settings),
+      (sum, r) => sum + memberMonthlyDividend(memberId, r, members, events, settings, overrides),
       0
     )
   );

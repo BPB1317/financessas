@@ -12,17 +12,24 @@ import type { InvestmentEvent, Member, MonthlyResult, Settings } from "@/lib/typ
 export async function recomputeReinvestments(): Promise<void> {
   const supabase = supabaseServer();
 
-  const [{ data: members }, { data: manualEvents }, { data: monthlyResults }, { data: settingsRow }] =
+  const [{ data: members }, { data: manualEvents }, { data: monthlyResults }, { data: settingsRow }, { data: overrideRows }] =
     await Promise.all([
       supabase.from("members").select("id, is_manager"),
       supabase.from("investment_events").select("member_id, date, amount").eq("source", "manual"),
       supabase.from("monthly_results").select("id, date, total_benefice").order("date", { ascending: true }),
       supabase.from("settings").select("manager_share_pct").single(),
+      supabase.from("monthly_dividend_overrides").select("monthly_result_id"),
     ]);
 
   const membersList = (members ?? []) as Pick<Member, "id" | "is_manager">[];
   const settings = (settingsRow ?? { manager_share_pct: 75 }) as Pick<Settings, "manager_share_pct">;
   const results = (monthlyResults ?? []) as Pick<MonthlyResult, "id" | "date" | "total_benefice">[];
+
+  // Les mois archivés (dividendes historiques importés) ne génèrent pas de
+  // réinvestissement : on ne connaît pas leur véritable effet composé sur
+  // l'investissement, et le "capital actuel" saisi manuellement en tient déjà
+  // compte. Seuls les mois calculés en direct par l'app font grossir le capital.
+  const archivedResultIds = new Set((overrideRows ?? []).map((o) => o.monthly_result_id));
 
   // Liste d'événements qu'on enrichit au fur et à mesure de la boucle, pour
   // que le mois M+1 voie bien les réinvestissements générés pour le mois M.
@@ -40,6 +47,7 @@ export async function recomputeReinvestments(): Promise<void> {
   }> = [];
 
   for (const result of results) {
+    if (archivedResultIds.has(result.id)) continue;
     const monthLabel = format(parseISO(result.date), "MMMM yyyy", { locale: fr });
     for (const member of membersList) {
       const pct = dividendPct(member.id, endOfMonthIso(result.date), membersList, events, settings);
