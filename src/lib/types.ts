@@ -1,6 +1,7 @@
 export type Settings = {
   fund_name: string;
   manager_share_pct: number;
+  performance_start_date: string; // YYYY-MM-DD
 };
 
 export type Member = {

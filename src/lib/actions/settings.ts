@@ -14,6 +14,7 @@ export async function updateSettings(
 
   const fundName = String(formData.get("fund_name") ?? "").trim();
   const managerSharePct = Number(formData.get("manager_share_pct") ?? NaN);
+  const performanceStartDate = String(formData.get("performance_start_date") ?? "");
 
   if (!fundName) {
     return { error: "Le nom du fonds est obligatoire." };
@@ -21,11 +22,18 @@ export async function updateSettings(
   if (Number.isNaN(managerSharePct) || managerSharePct < 0 || managerSharePct > 100) {
     return { error: "La part du gérant doit être un nombre entre 0 et 100." };
   }
+  if (!performanceStartDate) {
+    return { error: "La date de référence pour la performance nette est obligatoire." };
+  }
 
   const supabase = supabaseServer();
   const { error } = await supabase
     .from("settings")
-    .update({ fund_name: fundName, manager_share_pct: managerSharePct })
+    .update({
+      fund_name: fundName,
+      manager_share_pct: managerSharePct,
+      performance_start_date: performanceStartDate,
+    })
     .eq("id", true);
 
   if (error) return { error: error.message };

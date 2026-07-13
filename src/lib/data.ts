@@ -23,7 +23,10 @@ export async function getFundData(): Promise<FundData> {
         .order("created_at", { ascending: true }),
       supabase.from("investment_events").select("*").order("date", { ascending: true }),
       supabase.from("monthly_results").select("*").order("date", { ascending: true }),
-      supabase.from("settings").select("fund_name, manager_share_pct").single(),
+      supabase
+        .from("settings")
+        .select("fund_name, manager_share_pct, performance_start_date")
+        .single(),
       supabase.from("monthly_dividend_overrides").select("monthly_result_id, member_id, amount"),
     ]);
 
@@ -37,7 +40,11 @@ export async function getFundData(): Promise<FundData> {
     members: (members ?? []) as Member[],
     events: (events ?? []) as InvestmentEvent[],
     results: (results ?? []) as MonthlyResult[],
-    settings: (settingsRow ?? { fund_name: "SAS Betting", manager_share_pct: 75 }) as Settings,
+    settings: (settingsRow ?? {
+      fund_name: "SAS Betting",
+      manager_share_pct: 75,
+      performance_start_date: "2026-07-01",
+    }) as Settings,
     overrides,
   };
 }

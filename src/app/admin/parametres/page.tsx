@@ -25,7 +25,11 @@ export default async function AdminParametresPage() {
           <CardDescription>Nom affiché et règle de répartition des dividendes.</CardDescription>
         </CardHeader>
         <CardContent>
-          <SettingsForm fundName={settings.fund_name} managerSharePct={settings.manager_share_pct} />
+          <SettingsForm
+            fundName={settings.fund_name}
+            managerSharePct={settings.manager_share_pct}
+            performanceStartDate={settings.performance_start_date}
+          />
         </CardContent>
       </Card>
     </div>

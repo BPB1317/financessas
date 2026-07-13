@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TickerTape, type TickerItem } from "@/components/dashboard/TickerTape";
+import { NavLinks } from "@/components/dashboard/NavLinks";
 
 const NAV_LINKS = [
   { href: "/", label: "Vue d'ensemble" },
@@ -61,25 +61,10 @@ export default async function DashboardLayout({
               </form>
             </div>
           </div>
-          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="transition-colors hover:text-foreground"
-              >
-                {link.label}
-              </Link>
-            ))}
-            {session.role === "admin" && (
-              <Link
-                href="/admin"
-                className="font-medium text-primary transition-colors hover:text-primary/80"
-              >
-                Administration
-              </Link>
-            )}
-          </nav>
+          <NavLinks
+            links={NAV_LINKS}
+            adminLink={session.role === "admin" ? { href: "/admin", label: "Administration" } : undefined}
+          />
         </div>
       </header>
       <TickerTape items={tickerItems} />

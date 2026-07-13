@@ -1,6 +1,8 @@
 import {
+  addDaysIso,
   cumulativeDividendSeries,
   investmentAsOf,
+  netPerformancePct,
   totalDividendsReceived,
 } from "@/lib/calculations";
 import { getFundData, todayIso } from "@/lib/data";
@@ -8,6 +10,7 @@ import { getSession } from "@/lib/session";
 import { formatEurPrecise, formatMonthYear } from "@/lib/format";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { DividendsChart } from "@/components/charts/DividendsChart";
+import { PerformanceRing } from "@/components/dashboard/PerformanceRing";
 import {
   Card,
   CardContent,
@@ -46,8 +49,25 @@ export default async function PerformancePage({
     );
   }
 
-  const since = sinceParam || member.joined_date;
   const today = todayIso();
+
+  // Performance nette : métrique fixe, composée mois par mois depuis la date
+  // de référence du fonds (Admin > Paramètres), indépendante du filtre
+  // "depuis le" ci-dessous qui sert à explorer librement l'historique.
+  const perfStart = settings.performance_start_date;
+  const netPct = netPerformancePct(member.id, perfStart, members, events, results, settings, overrides);
+  const perfStartCapital = investmentAsOf(member.id, addDaysIso(perfStart, -1), events);
+  const perfNetProfit = totalDividendsReceived(
+    member.id,
+    results.filter((r) => r.date >= perfStart),
+    members,
+    events,
+    settings,
+    overrides
+  );
+  const currentInvestment = investmentAsOf(member.id, today, events);
+
+  const since = sinceParam || member.joined_date;
 
   const resultsSince = results.filter((r) => r.date >= since).sort((a, b) => a.date.localeCompare(b.date));
 
@@ -67,7 +87,6 @@ export default async function PerformancePage({
     settings,
     overrides
   );
-  const currentInvestment = investmentAsOf(member.id, today, events);
 
   const chartData = cumulativeDividendSeries(
     [member],
@@ -85,6 +104,28 @@ export default async function PerformancePage({
           Vos dividendes personnels, {member.name}, depuis une date de votre choix.
         </p>
       </div>
+
+      <Card className="overflow-visible">
+        <CardContent className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+          <PerformanceRing
+            pct={netPct}
+            startDateLabel={new Date(perfStart).toLocaleDateString("fr-FR")}
+            startCapital={perfStartCapital}
+            currentCapital={currentInvestment}
+            netProfit={perfNetProfit}
+          />
+          <div className="text-center sm:text-left">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Performance nette
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Rendement net composé depuis le {new Date(perfStart).toLocaleDateString("fr-FR")},
+              calculé mois par mois sur votre capital (survolez ou touchez l&apos;anneau pour le
+              détail).
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <form className="flex flex-wrap items-end gap-3">
         <div className="space-y-2">

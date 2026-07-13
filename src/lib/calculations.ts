@@ -19,6 +19,13 @@ export function endOfMonthIso(dateIso: string): string {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 }
 
+// Décale une date ISO (YYYY-MM-DD) d'un nombre de jours (peut être négatif).
+export function addDaysIso(dateIso: string, days: number): string {
+  const [year, month, day] = dateIso.split("-").map(Number);
+  const dt = new Date(Date.UTC(year, month - 1, day + days));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
+}
+
 // Investissement cumulé d'un membre à une date donnée (inclut les apports,
 // retraits, et dividendes déjà réinvestis à cette date).
 export function investmentAsOf(
@@ -180,4 +187,33 @@ export function totalDividendsReceived(
       0
     )
   );
+}
+
+// Rendement net composé d'un membre depuis une date de référence : pour
+// chaque mois clôturé à partir de cette date, le dividende du mois est
+// rapporté au capital du membre juste avant ce mois-là (qui inclut déjà tous
+// les réinvestissements antérieurs — jamais recompté), puis les rendements
+// mensuels sont composés entre eux. Un membre sans capital sur un mois donné
+// (pas encore membre, par exemple) ne contribue simplement pas à ce mois.
+export function netPerformancePct(
+  memberId: string,
+  startDate: string,
+  members: Pick<Member, "id" | "is_manager">[],
+  events: Pick<InvestmentEvent, "member_id" | "date" | "amount">[],
+  results: Pick<MonthlyResult, "id" | "date" | "total_benefice">[],
+  settings: Pick<Settings, "manager_share_pct">,
+  overrides?: DividendOverrides
+): number {
+  const relevantResults = results
+    .filter((r) => r.date >= startDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  let compounded = 1;
+  for (const result of relevantResults) {
+    const capitalStart = investmentAsOf(memberId, addDaysIso(result.date, -1), events);
+    if (capitalStart <= 0) continue;
+    const dividend = memberMonthlyDividend(memberId, result, members, events, settings, overrides);
+    compounded *= 1 + dividend / capitalStart;
+  }
+  return compounded - 1;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -11,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatEurCompact, formatEurPrecise, formatMonthYear } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // Une entrée de --chart-1 à --chart-8 (voir globals.css) par slot, dans un
 // ordre fixe : chaque membre garde toujours la même couleur, quel que soit
@@ -34,6 +36,8 @@ type DividendsChartProps = {
 };
 
 export function DividendsChart({ data, members }: DividendsChartProps) {
+  const [scale, setScale] = useState<"linear" | "log">("linear");
+
   if (data.length === 0) {
     return (
       <div className="flex h-80 items-center justify-center text-sm text-muted-foreground">
@@ -43,60 +47,87 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={340}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-        <CartesianGrid
-          vertical={false}
-          strokeDasharray="0"
-          stroke="var(--border)"
-        />
-        <XAxis
-          dataKey="date"
-          tickLine={false}
-          axisLine={{ stroke: "var(--border)" }}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12}}
-          tickFormatter={(value: string) =>
-            new Date(value).toLocaleDateString("fr-FR", {
-              month: "short",
-              year: "2-digit",
-            })
-          }
-          minTickGap={24}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12}}
-          tickFormatter={(value: number) => formatEurCompact(value)}
-          width={64}
-        />
-        <Tooltip
-          cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1 }}
-          content={<DividendsTooltip members={members} />}
-        />
-        <Legend
-          verticalAlign="bottom"
-          height={36}
-          iconType="line"
-          iconSize={16}
-          formatter={(value: string) => (
-            <span className="text-foreground">{value}</span>
-          )}
-        />
-        {members.map((member, index) => (
-          <Line
-            key={member.id}
-            type="monotone"
-            dataKey={member.id}
-            name={member.name}
-            stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--background)" }}
-          />
+    <div>
+      <div className="mb-2 flex items-center justify-end gap-1">
+        {(["linear", "log"] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => setScale(option)}
+            className={cn(
+              "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+              scale === option
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-transparent text-muted-foreground hover:border-input hover:text-foreground"
+            )}
+          >
+            {option === "linear" ? "Linéaire" : "Logarithmique"}
+          </button>
         ))}
-      </LineChart>
-    </ResponsiveContainer>
+      </div>
+      <ResponsiveContainer width="100%" height={340}>
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+          <CartesianGrid
+            vertical={false}
+            strokeDasharray="0"
+            stroke="var(--border)"
+          />
+          <XAxis
+            dataKey="date"
+            tickLine={false}
+            axisLine={{ stroke: "var(--border)" }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+            tickFormatter={(value: string) =>
+              new Date(value).toLocaleDateString("fr-FR", {
+                month: "short",
+                year: "2-digit",
+              })
+            }
+            minTickGap={24}
+          />
+          <YAxis
+            scale={scale}
+            domain={scale === "log" ? [1, "auto"] : ["auto", "auto"]}
+            allowDataOverflow={scale === "log"}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+            tickFormatter={(value: number) => formatEurCompact(value)}
+            width={64}
+          />
+          <Tooltip
+            cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1 }}
+            content={<DividendsTooltip members={members} />}
+          />
+          <Legend
+            verticalAlign="bottom"
+            height={36}
+            iconType="line"
+            iconSize={16}
+            formatter={(value: string) => (
+              <span className="text-foreground">{value}</span>
+            )}
+          />
+          {members.map((member, index) => (
+            <Line
+              key={member.id}
+              type="monotone"
+              dataKey={member.id}
+              name={member.name}
+              stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--background)" }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+      {scale === "log" && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          L&apos;échelle logarithmique masque les valeurs nulles ou négatives.
+        </p>
+      )}
+    </div>
   );
 }
 

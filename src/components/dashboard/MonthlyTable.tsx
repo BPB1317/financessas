@@ -2,6 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -28,6 +29,14 @@ export function MonthlyTable({
       </p>
     );
   }
+
+  const totalBenefice = rows.reduce((sum, row) => sum + row.totalBenefice, 0);
+  const totalByMember = Object.fromEntries(
+    members.map((member) => [
+      member.id,
+      rows.reduce((sum, row) => sum + (row.dividends[member.id] ?? 0), 0),
+    ])
+  );
 
   return (
     <Table>
@@ -65,6 +74,24 @@ export function MonthlyTable({
           </TableRow>
         ))}
       </TableBody>
+      <TableFooter>
+        <TableRow>
+          <TableCell>Total annuel</TableCell>
+          <TableCell
+            className={`text-right tabular-nums ${totalBenefice < 0 ? "text-destructive" : ""}`}
+          >
+            {formatEurPrecise(totalBenefice)}
+          </TableCell>
+          {members.map((member) => (
+            <TableCell
+              key={member.id}
+              className={`text-right tabular-nums ${totalByMember[member.id] < 0 ? "text-destructive" : ""}`}
+            >
+              {formatEurPrecise(totalByMember[member.id])}
+            </TableCell>
+          ))}
+        </TableRow>
+      </TableFooter>
     </Table>
   );
 }

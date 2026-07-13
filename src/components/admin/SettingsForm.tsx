@@ -10,9 +10,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export function SettingsForm({
   fundName,
   managerSharePct,
+  performanceStartDate,
 }: {
   fundName: string;
   managerSharePct: number;
+  performanceStartDate: string;
 }) {
   const [state, action, pending] = useActionState(updateSettings, undefined);
 
@@ -36,6 +38,22 @@ export function SettingsForm({
         />
         <p className="text-xs text-muted-foreground">
           Le solde est réparti entre les autres membres au prorata de leur investissement.
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="performance_start_date">
+          Date de référence pour la performance nette
+        </Label>
+        <Input
+          id="performance_start_date"
+          name="performance_start_date"
+          type="date"
+          defaultValue={performanceStartDate}
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Utilisée pour l&apos;anneau de performance sur &quot;Ma performance&quot; de chaque
+          membre.
         </p>
       </div>
       {state?.error && (

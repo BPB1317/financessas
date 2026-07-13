@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/session";
+import { NavLinks } from "@/components/dashboard/NavLinks";
 
 const NAV_LINKS = [
   { href: "/admin", label: "Aperçu" },
@@ -30,17 +31,9 @@ export default async function AdminLayout({
           ← Retour au dashboard
         </Link>
       </div>
-      <nav className="flex flex-wrap gap-2 border-b border-border pb-3 text-sm">
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="border-b border-border pb-4">
+        <NavLinks links={NAV_LINKS} />
+      </div>
       {children}
     </div>
   );
