@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { scaleSymlog } from "d3-scale";
+import { useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -36,40 +35,20 @@ type DividendsChartProps = {
   members: { id: string; name: string }[];
 };
 
-// Paliers ×3 (3 k, 9 k, 27 k, 81 k, ...) en partant toujours de 0 : lisible
-// pour repérer les ordres de grandeur, plus parlant qu'une génération
-// automatique. On va jusqu'au premier palier qui dépasse le maximum affiché,
-// pour garder un espacement régulier entre paliers (jamais de dernier
-// palier "collé" au précédent).
-function logTicks(maxValue: number): number[] {
-  if (maxValue <= 0) return [0];
-  const ticks = [0];
-  let step = 3000;
-  while (true) {
-    ticks.push(step);
-    if (step >= maxValue) break;
-    step *= 3;
-  }
-  return ticks;
-}
-
 export function DividendsChart({ data, members }: DividendsChartProps) {
-  const [scale, setScale] = useState<"linear" | "log">("linear");
-  // symlog plutôt qu'un log classique : gère nativement le zéro et les
-  // valeurs négatives (un membre qui démarre à 0 € ou traverse une perte ne
-  // fait pas disparaître sa courbe), tout en écrasant les ordres de grandeur
-  // comme un vrai log au-delà de la zone proche de zéro.
-  const symlog = useMemo(() => scaleSymlog(), []);
+  // Un membre masqué via la légende est exclu du rendu ET du calcul
+  // automatique de l'échelle (prop `hide` de Recharts) : cliquer sur un gros
+  // montant pour l'isoler laisse l'axe se réajuster sur ce qui reste visible.
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
-  const maxValue = useMemo(
-    () =>
-      Math.max(
-        0,
-        ...data.flatMap((row) => members.map((m) => Number(row[m.id]) || 0))
-      ),
-    [data, members]
-  );
-  const ticks = useMemo(() => logTicks(maxValue), [maxValue]);
+  function toggleMember(memberId: string) {
+    setHiddenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(memberId)) next.delete(memberId);
+      else next.add(memberId);
+      return next;
+    });
+  }
 
   if (data.length === 0) {
     return (
@@ -81,23 +60,6 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-end gap-1">
-        {(["linear", "log"] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => setScale(option)}
-            className={cn(
-              "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-              scale === option
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-transparent text-muted-foreground hover:border-input hover:text-foreground"
-            )}
-          >
-            {option === "linear" ? "Linéaire" : "Logarithmique"}
-          </button>
-        ))}
-      </div>
       <ResponsiveContainer width="100%" height={340}>
         <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid
@@ -119,10 +81,7 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
             minTickGap={24}
           />
           <YAxis
-            scale={scale === "log" ? symlog : "linear"}
             domain={["auto", "auto"]}
-            ticks={scale === "log" ? ticks : undefined}
-            interval={0}
             tickLine={false}
             axisLine={false}
             tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
@@ -138,9 +97,23 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
             height={36}
             iconType="line"
             iconSize={16}
-            formatter={(value: string) => (
-              <span className="text-foreground">{value}</span>
-            )}
+            onClick={(entry) => {
+              if (typeof entry.dataKey === "string") toggleMember(entry.dataKey);
+            }}
+            formatter={(value: string, entry) => {
+              const isHidden =
+                typeof entry.dataKey === "string" && hiddenIds.has(entry.dataKey);
+              return (
+                <span
+                  className={cn(
+                    "cursor-pointer select-none",
+                    isHidden ? "text-muted-foreground line-through" : "text-foreground"
+                  )}
+                >
+                  {value}
+                </span>
+              );
+            }}
           />
           {members.map((member, index) => (
             <Line
@@ -151,11 +124,15 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
               stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
               strokeWidth={2}
               dot={false}
+              hide={hiddenIds.has(member.id)}
               activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--background)" }}
             />
           ))}
         </LineChart>
       </ResponsiveContainer>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        Cliquez sur un nom pour masquer sa courbe et réajuster l&apos;échelle.
+      </p>
     </div>
   );
 }
