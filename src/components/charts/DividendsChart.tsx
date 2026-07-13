@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { scaleSymlog } from "d3-scale";
 import {
   CartesianGrid,
   Legend,
@@ -37,6 +38,11 @@ type DividendsChartProps = {
 
 export function DividendsChart({ data, members }: DividendsChartProps) {
   const [scale, setScale] = useState<"linear" | "log">("linear");
+  // symlog plutôt qu'un log classique : gère nativement le zéro et les
+  // valeurs négatives (un membre qui démarre à 0 € ou traverse une perte ne
+  // fait pas disparaître sa courbe), tout en écrasant les ordres de grandeur
+  // comme un vrai log au-delà de la zone proche de zéro.
+  const symlog = useMemo(() => scaleSymlog(), []);
 
   if (data.length === 0) {
     return (
@@ -86,9 +92,8 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
             minTickGap={24}
           />
           <YAxis
-            scale={scale}
-            domain={scale === "log" ? [1, "auto"] : ["auto", "auto"]}
-            allowDataOverflow={scale === "log"}
+            scale={scale === "log" ? symlog : "linear"}
+            domain={["auto", "auto"]}
             tickLine={false}
             axisLine={false}
             tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
@@ -122,11 +127,6 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      {scale === "log" && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          L&apos;échelle logarithmique masque les valeurs nulles ou négatives.
-        </p>
-      )}
     </div>
   );
 }
