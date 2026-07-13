@@ -1,14 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { recomputeReinvestments } from "@/lib/recompute";
+import { invalidateFundData as revalidateAll } from "@/lib/data";
 import type { ActionState } from "@/components/admin/FormDialog";
-
-function revalidateAll() {
-  revalidatePath("/", "layout");
-}
 
 async function uploadPdf(supabase: ReturnType<typeof supabaseServer>, id: string, file: File) {
   const path = `${id}.pdf`;

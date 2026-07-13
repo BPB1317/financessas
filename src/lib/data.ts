@@ -1,4 +1,5 @@
 import "server-only";
+import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { DividendOverrides } from "@/lib/calculations";
 import type { InvestmentEvent, Member, MonthlyResult, Settings } from "@/lib/types";
@@ -11,7 +12,19 @@ export type FundData = {
   overrides: DividendOverrides;
 };
 
-export async function getFundData(): Promise<FundData> {
+// Ces tables ne changent que via l'admin, qui invalide ce tag après chaque
+// mutation (voir lib/actions/*.ts) — on peut donc mettre en cache le
+// résultat entre deux navigations sans risquer d'afficher des données
+// périmées, et éviter de refaire 5 requêtes Supabase à chaque clic.
+export const FUND_DATA_TAG = "fund-data";
+
+export const getFundData = unstable_cache(
+  async (): Promise<FundData> => fetchFundData(),
+  ["fund-data"],
+  { tags: [FUND_DATA_TAG], revalidate: 300 }
+);
+
+async function fetchFundData(): Promise<FundData> {
   const supabase = supabaseServer();
 
   const [{ data: members }, { data: events }, { data: results }, { data: settingsRow }, { data: overrideRows }] =
@@ -51,4 +64,13 @@ export async function getFundData(): Promise<FundData> {
 
 export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+// À appeler après toute mutation admin (membres, investissements, bilans,
+// DCA, paramètres) — uniquement depuis un Server Action. updateTag garantit
+// que la requête suivante voit la donnée fraîche (pas de stale-while-
+// revalidate), contrairement à revalidateTag.
+export function invalidateFundData(): void {
+  updateTag(FUND_DATA_TAG);
+  revalidatePath("/", "layout");
 }

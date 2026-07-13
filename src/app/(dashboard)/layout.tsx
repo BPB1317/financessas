@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/session";
-import { supabaseServer } from "@/lib/supabase/server";
+import { getFundData } from "@/lib/data";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,25 +19,20 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await requireSession();
-  const supabase = supabaseServer();
-  const [{ data: settings }, { data: recentEvents }] = await Promise.all([
-    supabase.from("settings").select("fund_name").single(),
-    supabase
-      .from("investment_events")
-      .select("id, date, amount, source, member:members(name)")
-      .eq("hidden", false)
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(20),
-  ]);
+  const { members, events, settings } = await getFundData();
+  const memberById = new Map(members.map((m) => [m.id, m]));
 
-  const tickerItems: TickerItem[] = (recentEvents ?? []).map((event) => ({
-    id: event.id,
-    memberName: (event.member as unknown as { name: string } | null)?.name ?? "—",
-    amount: event.amount,
-    date: event.date,
-    isReinvestment: event.source === "reinvestment",
-  }));
+  const tickerItems: TickerItem[] = [...events]
+    .filter((e) => !e.hidden)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at))
+    .slice(0, 20)
+    .map((event) => ({
+      id: event.id,
+      memberName: memberById.get(event.member_id)?.name ?? "—",
+      amount: event.amount,
+      date: event.date,
+      isReinvestment: event.source === "reinvestment",
+    }));
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,7 +40,7 @@ export default async function DashboardLayout({
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-lg font-semibold tracking-tight">
-              {settings?.fund_name ?? "SAS Betting"}
+              {settings.fund_name}
             </span>
             <div className="flex items-center gap-3">
               <div className="text-right text-sm">

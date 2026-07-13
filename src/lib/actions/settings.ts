@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { recomputeReinvestments } from "@/lib/recompute";
+import { invalidateFundData } from "@/lib/data";
 import type { ActionState } from "@/components/admin/FormDialog";
 
 export async function updateSettings(
@@ -39,6 +39,6 @@ export async function updateSettings(
   if (error) return { error: error.message };
 
   await recomputeReinvestments();
-  revalidatePath("/", "layout");
+  invalidateFundData();
   return { success: true };
 }

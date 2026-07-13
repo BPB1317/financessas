@@ -36,6 +36,23 @@ type DividendsChartProps = {
   members: { id: string; name: string }[];
 };
 
+// Paliers ×3 (3 k, 9 k, 27 k, 81 k, ...) en partant toujours de 0 : lisible
+// pour repérer les ordres de grandeur, plus parlant qu'une génération
+// automatique. On va jusqu'au premier palier qui dépasse le maximum affiché,
+// pour garder un espacement régulier entre paliers (jamais de dernier
+// palier "collé" au précédent).
+function logTicks(maxValue: number): number[] {
+  if (maxValue <= 0) return [0];
+  const ticks = [0];
+  let step = 3000;
+  while (true) {
+    ticks.push(step);
+    if (step >= maxValue) break;
+    step *= 3;
+  }
+  return ticks;
+}
+
 export function DividendsChart({ data, members }: DividendsChartProps) {
   const [scale, setScale] = useState<"linear" | "log">("linear");
   // symlog plutôt qu'un log classique : gère nativement le zéro et les
@@ -43,6 +60,16 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
   // fait pas disparaître sa courbe), tout en écrasant les ordres de grandeur
   // comme un vrai log au-delà de la zone proche de zéro.
   const symlog = useMemo(() => scaleSymlog(), []);
+
+  const maxValue = useMemo(
+    () =>
+      Math.max(
+        0,
+        ...data.flatMap((row) => members.map((m) => Number(row[m.id]) || 0))
+      ),
+    [data, members]
+  );
+  const ticks = useMemo(() => logTicks(maxValue), [maxValue]);
 
   if (data.length === 0) {
     return (
@@ -94,6 +121,8 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
           <YAxis
             scale={scale === "log" ? symlog : "linear"}
             domain={["auto", "auto"]}
+            ticks={scale === "log" ? ticks : undefined}
+            interval={0}
             tickLine={false}
             axisLine={false}
             tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
