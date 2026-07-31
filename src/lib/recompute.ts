@@ -1,8 +1,7 @@
 import "server-only";
-import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
 import { supabaseServer } from "@/lib/supabase/server";
 import { dividendPct, endOfMonthIso, round2 } from "@/lib/calculations";
+import { formatMonthYear } from "@/lib/format";
 import type { InvestmentEvent, Member, MonthlyResult, Settings } from "@/lib/types";
 
 // Régénère tous les mouvements "reinvestment" à partir des mouvements
@@ -48,7 +47,7 @@ export async function recomputeReinvestments(): Promise<void> {
 
   for (const result of results) {
     if (archivedResultIds.has(result.id)) continue;
-    const monthLabel = format(parseISO(result.date), "MMMM yyyy", { locale: fr });
+    const monthLabel = formatMonthYear(result.date);
     for (const member of membersList) {
       const pct = dividendPct(member.id, endOfMonthIso(result.date), membersList, events, settings);
       const amount = round2(result.total_benefice * pct);

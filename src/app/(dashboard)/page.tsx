@@ -9,7 +9,7 @@ import {
   totalInvestmentAsOf,
 } from "@/lib/calculations";
 import { getFundData, todayIso } from "@/lib/data";
-import { formatEur } from "@/lib/format";
+import { formatEur, reportingPeriodIso } from "@/lib/format";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { MembersTable, type MemberRow } from "@/components/dashboard/MembersTable";
 import { MonthlyTable, type MonthlyRow } from "@/components/dashboard/MonthlyTable";
@@ -49,16 +49,20 @@ export default async function DashboardPage() {
 
   const chartData = cumulativeDividendSeries(members, results, events, settings, overrides);
 
-  const years = Array.from(new Set(results.map((r) => r.date.slice(0, 4)))).sort(
-    (a, b) => Number(b) - Number(a)
-  );
+  // Groupé par la période réellement rapportée (voir reportingPeriodIso),
+  // pas par la date brute stockée (1er du mois suivant) : sinon le bilan de
+  // décembre, daté au 1er janvier, se retrouverait affiché dans l'onglet de
+  // l'année suivante.
+  const years = Array.from(
+    new Set(results.map((r) => reportingPeriodIso(r.date).slice(0, 4)))
+  ).sort((a, b) => Number(b) - Number(a));
   const currentYear = today.slice(0, 4);
   const defaultYear = years.includes(currentYear) ? currentYear : years[0];
 
   const rowsByYear: Record<string, MonthlyRow[]> = {};
   for (const year of years) {
     rowsByYear[year] = results
-      .filter((r) => r.date.startsWith(year))
+      .filter((r) => reportingPeriodIso(r.date).startsWith(year))
       .map((r) => {
         const breakdown = monthlyBreakdown(r, members, events, settings, overrides);
         return {

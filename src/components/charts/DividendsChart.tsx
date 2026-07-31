@@ -11,7 +11,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatEurCompact, formatEurPrecise, formatMonthYear } from "@/lib/format";
+import {
+  formatEurCompact,
+  formatEurPrecise,
+  formatMonthYear,
+  formatMonthYearShort,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 // Une entrée de --chart-1 à --chart-8 (voir globals.css) par slot, dans un
@@ -72,12 +77,7 @@ export function DividendsChart({ data, members }: DividendsChartProps) {
             tickLine={false}
             axisLine={{ stroke: "var(--border)" }}
             tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-            tickFormatter={(value: string) =>
-              new Date(value).toLocaleDateString("fr-FR", {
-                month: "short",
-                year: "2-digit",
-              })
-            }
+            tickFormatter={(value: string) => formatMonthYearShort(value)}
             minTickGap={24}
           />
           <YAxis
