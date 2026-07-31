@@ -18,14 +18,22 @@ import {
 } from "@/components/ui/card";
 import { formatEurPrecise, formatMonthYear } from "@/lib/format";
 
-function firstOfMonth(date: string): string {
-  return `${date.slice(0, 7)}-01`;
+// Convention du fonds : un bilan est daté du 1er du mois qui SUIT la période
+// qu'il couvre (le bilan de juillet est daté du 1er août). Comme on ajoute
+// en général un bilan une fois le mois écoulé, "aujourd'hui" tombe déjà dans
+// ce mois suivant : on propose donc par défaut le 1er du mois prochain
+// relatif à aujourd'hui, pour ne pas avoir à corriger la date à la main.
+function firstOfNextMonth(date: string): string {
+  const [year, month] = date.slice(0, 7).split("-").map(Number);
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+  return `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
 }
 
 export default async function AdminBilansPage() {
   const { results } = await getFundData();
   const sorted = [...results].sort((a, b) => b.date.localeCompare(a.date));
-  const defaultDate = firstOfMonth(todayIso());
+  const defaultDate = firstOfNextMonth(todayIso());
 
   return (
     <div className="space-y-6">
@@ -43,8 +51,12 @@ export default async function AdminBilansPage() {
           submitLabel="Ajouter"
         >
           <div className="space-y-2">
-            <Label htmlFor="date">Mois</Label>
+            <Label htmlFor="date">Daté du</Label>
             <Input id="date" name="date" type="date" defaultValue={defaultDate} required />
+            <p className="text-xs text-muted-foreground">
+              Le 1er du mois qui suit celui rapporté (le bilan de juillet est daté du
+              1er août).
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="total_benefice">Bénéfice total du fonds (€)</Label>
@@ -90,7 +102,7 @@ export default async function AdminBilansPage() {
                   >
                     <input type="hidden" name="id" value={result.id} />
                     <div className="space-y-2">
-                      <Label htmlFor={`date-${result.id}`}>Mois</Label>
+                      <Label htmlFor={`date-${result.id}`}>Daté du</Label>
                       <Input
                         id={`date-${result.id}`}
                         name="date"
