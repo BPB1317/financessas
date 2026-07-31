@@ -62,8 +62,20 @@ async function fetchFundData(): Promise<FundData> {
   };
 }
 
+// Le serveur (Vercel) tourne en UTC : utiliser toISOString() ferait changer
+// "aujourd'hui" à minuit UTC, soit 1h ou 2h avant minuit en France selon la
+// saison — un mouvement daté du 1er du mois n'apparaîtrait dans les totaux
+// que tard dans la nuit, heure française. On calcule donc explicitement la
+// date du jour dans le fuseau du fonds.
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 // À appeler après toute mutation admin (membres, investissements, bilans,
