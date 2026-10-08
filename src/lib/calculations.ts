@@ -8,17 +8,6 @@ export function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-// Dernier jour du mois d'une date ISO (YYYY-MM-DD) donnée, en UTC pour éviter
-// tout décalage de fuseau horaire. `monthly_results.date` est toujours le 1er
-// du mois par convention, mais un mouvement d'investissement manuel peut être
-// daté n'importe quel jour de ce même mois et doit quand même compter dans le
-// calcul du dividende de ce mois-là (voir "modification en cours de mois").
-export function endOfMonthIso(dateIso: string): string {
-  const [year, month] = dateIso.split("-").map(Number);
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-}
-
 // Décale une date ISO (YYYY-MM-DD) d'un nombre de jours (peut être négatif).
 export function addDaysIso(dateIso: string, days: number): string {
   const [year, month, day] = dateIso.split("-").map(Number);
@@ -101,7 +90,13 @@ export function dividendPct(
 // automatique — voir supabase/migrations/0002_dividend_overrides.sql.
 export type DividendOverrides = Record<string, Record<string, number>>;
 
-// Dividende en euros d'un membre pour un mois donné.
+// Dividende en euros d'un membre pour un mois donné. Le % est calculé sur le
+// capital tel qu'il était à la fin du mois RÉELLEMENT rapporté (la veille de
+// `result.date`, qui est toujours le 1er du mois suivant — voir
+// reportingPeriodIso dans format.ts) : un mouvement daté n'importe quel jour
+// de ce mois compte pour ce mois, rien avant, rien après. Un membre sans
+// capital à cette date (pas encore arrivé, ou apport trop tardif dans le
+// mois) ne touche simplement rien sur ce mois-là.
 export function memberMonthlyDividend(
   memberId: string,
   result: Pick<MonthlyResult, "id" | "date" | "total_benefice">,
@@ -113,7 +108,8 @@ export function memberMonthlyDividend(
   const override = overrides?.[result.id]?.[memberId];
   if (override !== undefined) return override;
 
-  const pct = dividendPct(memberId, endOfMonthIso(result.date), members, events, settings);
+  const reportedMonthEnd = addDaysIso(result.date, -1);
+  const pct = dividendPct(memberId, reportedMonthEnd, members, events, settings);
   return round2(result.total_benefice * pct);
 }
 

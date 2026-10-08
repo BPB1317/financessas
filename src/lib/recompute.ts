@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseServer } from "@/lib/supabase/server";
-import { dividendPct, endOfMonthIso, round2 } from "@/lib/calculations";
+import { addDaysIso, dividendPct, round2 } from "@/lib/calculations";
 import { formatMonthYear } from "@/lib/format";
 import type { InvestmentEvent, Member, MonthlyResult, Settings } from "@/lib/types";
 
@@ -49,7 +49,7 @@ export async function recomputeReinvestments(): Promise<void> {
     if (archivedResultIds.has(result.id)) continue;
     const monthLabel = formatMonthYear(result.date);
     for (const member of membersList) {
-      const pct = dividendPct(member.id, endOfMonthIso(result.date), membersList, events, settings);
+      const pct = dividendPct(member.id, addDaysIso(result.date, -1), membersList, events, settings);
       const amount = round2(result.total_benefice * pct);
       if (amount === 0) continue;
 
